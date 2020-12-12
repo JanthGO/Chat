@@ -377,7 +377,9 @@
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
   <script>
+    bandera = false;
     $(function () {
+      bandera = true;
       var socket = io();
       $('form').submit(function (e) {
         e.preventDefault(); 
@@ -396,20 +398,30 @@
       if (!navigator.geolocation) {
         textoChat("Tu navegador no es compatible");
       }
+      
       navigator.geolocation.getCurrentPosition(mostrarPos, errorLoc);
 
     }
 
     function mostrarPos(pos) {
+      var socket = io();
       var texto = "Ubicación Actual:<br/>";
       texto += "\nLatitud: " + pos.coords.latitude + "<br/>" + "Longitud: " + pos.coords.longitude+"<br/>";
+      
       var img_url = "https://maps.googleapis.com/maps/api/staticmap" +
         "?center=" + pos.coords.latitude + "," + pos.coords.longitude +
         "&zoom=14" +
         "&size=400x300" +
         "&key=AIzaSyCv9VAsM4KzjDdvuV2CzFAMuazqOfqFlgM";
       texto += "<img src='" + img_url + "'>";
-      textoChat(texto);
+
+      socket.emit('chat message', texto);
+      if(bandera=true){
+      socket.on('chat message', function (msg) {
+        mostrarNotificacion("Nueva ubicacion");
+        textoChat(msg);
+      });}
+      bandera= false;
     }
 
     function errorLoc(error) {
