@@ -325,17 +325,16 @@
           <div class="card-header msg_head">
             <div class="d-flex bd-highlight">
               <div class="img_cont">
-                <img src="https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg" class="rounded-circle user_img">
+                <img
+                  src="https://image.freepik.com/vector-gratis/grupo-gente-joven-abrazandose-diseno-plano_52683-13322.jpg"
+                  class="rounded-circle user_img">
                 <span class="online_icon"></span>
               </div>
               <div class="user_info">
-                <span>Chat with Khalid</span>
+                <span>Chat en grupo</span>
                 <p>x Messages</p>
               </div>
-              <div class="video_cam">
-                <span><i class="fas fa-video"></i></span>
-                <span><i class="fas fa-phone"></i></span>
-              </div>
+
             </div>
             <span id="action_menu_btn"><i class="fas fa-ellipsis-v"></i></span>
             <div class="action_menu">
@@ -350,18 +349,22 @@
 
           <div class="card-body msg_card_body" id="chatBox">
           </div>
-          
+
           <form action="">
             <div class="card-footer">
               <div class="input-group">
-                <div class="input-group-append">
-                  <span class="input-group-text attach_btn"><i class="fas fa-paperclip"></i></span>
-                </div>
                 <textarea id="m" class="form-control type_msg" placeholder="Type your message..."></textarea>
                 <div class="input-group-append">
-                  <button class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
+                  <label class="input-group-text send_btn"><i class="fas fa-location-arrow"
+                      onclick="obtenerLocalizacion()"></i></label>
+                </div>
+                <div class="input-group-append">
+                  <button class="input-group-text send_btn">Enviar</button>
                 </div>
               </div>
+            </div>
+            <div>
+              <label id="txtMensaje"></label>
             </div>
           </form>
         </div>
@@ -377,26 +380,99 @@
     $(function () {
       var socket = io();
       $('form').submit(function (e) {
-        e.preventDefault(); // prevents page reloading
+        e.preventDefault(); 
         socket.emit('chat message', $('#m').val());
         $('#m').val('');
         return false;
       });
 
       socket.on('chat message', function (msg) {
-        var componente = "<div class='d-flex justify-content-start mb-4'>";
-        componente += "<div class='img_cont_msg'>";
-        componente += "<img src='https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg' class='rounded-circle user_img_msg'>";
-        componente += "</div>";
-        componente += "<div class='msg_cotainer'>";
-        componente += msg;
-        componente += "<span class='msg_time'>8:40 AM, Today</span>";
-        componente += "</div>";
-        componente += "</div > ";
-
-        $('#chatBox').append(componente);
+        mostrarNotificacion(msg);
+        textoChat(msg);
       });
     });
+
+    function obtenerLocalizacion() {
+      if (!navigator.geolocation) {
+        textoChat("Tu navegador no es compatible");
+      }
+      navigator.geolocation.getCurrentPosition(mostrarPos, errorLoc);
+
+    }
+
+    function mostrarPos(pos) {
+      var texto = "Ubicación Actual:<br/>";
+      texto += "\nLatitud: " + pos.coords.latitude + "<br/>" + "Longitud: " + pos.coords.longitude+"<br/>";
+      var img_url = "https://maps.googleapis.com/maps/api/staticmap" +
+        "?center=" + pos.coords.latitude + "," + pos.coords.longitude +
+        "&zoom=14" +
+        "&size=400x300" +
+        "&key=AIzaSyCv9VAsM4KzjDdvuV2CzFAMuazqOfqFlgM";
+      texto += "<img src='" + img_url + "'>";
+      textoChat(texto);
+    }
+
+    function errorLoc(error) {
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          textoChat("No tienes permisos de acceder a la Geolocalización");
+          break;
+        case error.POSITION_UNAVAILABLE:
+        textoChat("No se pudo acceder a la localización");
+          break;
+        case error.TIMEOUT:
+        textoChat("El tiempo de respuesta para obtener la localización se agoto");
+          break;
+        case error.UKNOWN_ERROR:
+        textoChat("A ocurrudo un error");
+        default:
+        textoChat("A ocurrudo un error");
+          break;
+      }
+    }
+
+    function mostrarNotificacion(msg) {
+            var txtMensaje = document.getElementById("txtMensaje");
+            if(!window.Notification) {
+                txtMensaje.innerText = "No es compatible tu navegador";
+            }
+            Notification.requestPermission(function(status) {
+                if(Notification.permission !== status) {
+                    Notification.permission = status;
+                }
+                if(Notification.permission == "granted") {
+                    var n = new Notification("Chat", {
+                        body: msg,
+                        icon: "https://i.pinimg.com/originals/56/96/3d/56963dd0ef0ce04f46f59bf4dab98eb6.png",
+                        image: "https://image.freepik.com/vector-gratis/grupo-gente-joven-abrazandose-diseno-plano_52683-13322.jpg",
+                        vibrate: [200, 100],
+                        data: {userId: 1235, mensaje: "Este es el mensaje"},
+
+                    });
+
+                    n.onclick = (args) => {
+                        alert("Se le dio click");
+                        console.log(args.currentTarget.data);
+                    }
+                } else {
+                    txtMensaje.innerText = "No tienes permiso para mandar notifiaciones";
+                }
+            });
+        }
+
+    function textoChat(x) {
+      var d = new Date();
+      var componente = "<div class='d-flex justify-content-start mb-4'>";
+      componente += "<div class='img_cont_msg'>";
+      componente += "<img src='https://static.turbosquid.com/Preview/001292/481/WV/_D.jpg' class='rounded-circle user_img_msg'>";
+      componente += "</div>";
+      componente += "<div class='msg_cotainer'>";
+      componente += x;
+      componente += "<span class='msg_time'>"+d.getHours()+":"+d.getMinutes()+", Today</span>";
+      componente += "</div>";
+      componente += "</div > ";
+      $('#chatBox').append(componente);
+    }
   </script>
 </body>
 
